@@ -2,41 +2,98 @@ package server;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.concurrent.TimeUnit;
 
 public class UDPPort {
 
     private Server server;
     private int port;
     private DatagramSocket socket;
+    private int id;
+    private boolean sendMessage;
 
     public UDPPort(int port, Server server) throws SocketException {
         this.port = port;
         this.server = server;
         socket = new DatagramSocket(port);
+        server.id++;
+        id = server.id;
         service();
     }
 
+    public Server getServer() {
+        return server;
+    }
+
+    public void setServer(Server server) {
+        this.server = server;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public DatagramSocket getSocket() {
+        return socket;
+    }
+
+    public void setSocket(DatagramSocket socket) {
+        this.socket = socket;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public boolean isSendMessage() {
+        return sendMessage;
+    }
+
+    public void setSendMessage(boolean sendMessage) {
+        this.sendMessage = sendMessage;
+    }
 
     private void service() {
         System.out.println("Opening socket on port: " + port);
 
             new Thread(() -> {
                 while(true) {
-                        System.out.println(port);
                     byte[] buff = new byte[508];
                     final DatagramPacket datagram = new DatagramPacket(buff, buff.length);
 
                     try {
                         socket.receive(datagram);
-//                        if(port = server.ports.get(0))
-                        System.out.println("starting socket on port: " + socket.getLocalPort());
+                        String text = new String(datagram.getData(), 0, datagram.getLength());
+                        System.out.println("I've got " + text + " on socket " + id);
 
+                        if(!server.knockCheckers.containsKey(datagram.getAddress())){
+                            System.out.println("Creating new checker");
+                            server.knockCheckers.put(datagram.getAddress(), new KnockChecker(datagram.getAddress(), server));
+                        }
+                        if(server.knockCheckers.containsKey(datagram.getAddress())) {
+                            System.out.println("Checking");
+                            server.knockCheckers.get(datagram.getAddress()).check(this);
+                        }
+                        TimeUnit.SECONDS.sleep(1);
                     }catch (IOException e){
                         e.printStackTrace();
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
                     }
-                    System.out.println("starting socket on port: " + socket.getLocalPort());
-                    String text = new String(datagram.getData(), 0, datagram.getLength());
-                    System.out.println("I've got " + text);
+
+
+                    if(sendMessage){
+                        System.out.println("\n\n\n\n" +"INFO: socket " + id + " Ready to send message " + "\n\n\n\n");
+                        sendMessage = false;
+                    }
     //                String response = "echo: " + text;
     //                byte[] respBuff = String.valueOf(response).getBytes();
     //                int clientPort = datagram.getPort();

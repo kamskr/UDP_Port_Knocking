@@ -1,17 +1,29 @@
 package server;
 
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Server {
     private List<UDPPort> sockets = new ArrayList<>();
-    private int numOfPorts = 0;
+    private int numOfPorts;
     public List<Integer> ports = new ArrayList<>();
     public  boolean[] check = new boolean[]{false, false, false};
+    public int id = 0;
+    public Map<InetAddress,KnockChecker> knockCheckers = new HashMap<>();
 
     private String givenPorts;
 
+    public int getNumOfPorts() {
+        return numOfPorts;
+    }
+
+    public void setNumOfPorts(int numOfPorts) {
+        this.numOfPorts = numOfPorts;
+    }
 
     public Server(String givenPorts) throws SocketException {
         this.givenPorts = givenPorts;
@@ -31,10 +43,8 @@ public class Server {
             System.out.println("creating socket on port: " + port);
             sockets.add(new UDPPort(port, this));
         }
-        System.out.println();
-        System.out.println();
 
-        System.out.print("UDPPort listens on ports: ");
+        System.out.print("Server listens on ports: ");
         for(int port : ports){
             System.out.print(port + ", ");
         }
