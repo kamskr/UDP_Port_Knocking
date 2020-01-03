@@ -92,19 +92,20 @@ public class UDPPort {
 
                     if(sendMessage){
                         System.out.println("\n\n\n\n" +"INFO: socket " + id + " Ready to send message " + "\n\n\n\n");
+                        String response = "connected on a port: " + port;
+                        byte[] respBuff = String.valueOf(response).getBytes();
+                        int clientPort = datagram.getPort();
+                        InetAddress clientAddress = datagram.getAddress();
+                        DatagramPacket resp = new DatagramPacket(respBuff, respBuff.length, clientAddress, clientPort);
+                        try {
+                            socket.send(resp);
+                            System.out.println("I've sent information that we're " + response);
+                        } catch (IOException e) {
+                            // do nothing
+                        }
+
                         sendMessage = false;
                     }
-    //                String response = "echo: " + text;
-    //                byte[] respBuff = String.valueOf(response).getBytes();
-    //                int clientPort = datagram.getPort();
-    //                InetAddress clientAddress = datagram.getAddress();
-    //                DatagramPacket resp = new DatagramPacket(respBuff, respBuff.length, clientAddress, clientPort);
-    //                try {
-    //                    server.send(resp);
-    //                    System.out.println("I've sent " + response);
-    //                } catch (IOException e) {
-    //                    // do nothing
-    //                }
                 }
             }).start();
     }
