@@ -28,7 +28,7 @@ public class UDPPort {
 
                     try {
                         socket.receive(datagram);
-                        if(port = server.p)
+//                        if(port = server.ports.get(0))
                         System.out.println("starting socket on port: " + socket.getLocalPort());
 
                     }catch (IOException e){
