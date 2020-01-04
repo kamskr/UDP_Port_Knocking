@@ -21,10 +21,6 @@ public class Server {
         return numOfPorts;
     }
 
-    public void setNumOfPorts(int numOfPorts) {
-        this.numOfPorts = numOfPorts;
-    }
-
     public Server(String givenPorts) throws SocketException {
         this.givenPorts = givenPorts;
         initializeServer();
@@ -40,11 +36,11 @@ public class Server {
         for(int i = 0; i < numOfPorts ; i++){
             int port = Integer.parseInt(portsAsString[i]);
             ports.add(port);
-            System.out.println("creating socket on port: " + port);
+            System.out.println("INFO: creating socket on port: " + port);
             sockets.add(new UDPPort(port, this));
-        }
+        }System.out.println("INFO: sent response");
 
-        System.out.print("Server listens on ports: ");
+        System.out.print("INFO Server listens on ports: ");
         for(int port : ports){
             System.out.print(port + ", ");
         }
@@ -53,7 +49,7 @@ public class Server {
 
     public static void main(String[] args) {
         try{
-            new Server("1234,4321,1324");
+            new Server("1234,4321,1324,5432");
         }catch (SocketException e){
             e.printStackTrace();
         }
