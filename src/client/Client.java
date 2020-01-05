@@ -13,6 +13,9 @@ public class Client {
 //        String givenPorts = args[0];
 //        InetAddress address = args[1];
 
+        byte[] buff = new byte[2000];
+        DatagramPacket packet = new DatagramPacket(buff, buff.length);
+
         InetAddress address = InetAddress.getLocalHost();
 
         String text = "knock knock";
@@ -20,37 +23,33 @@ public class Client {
         byte[] queryBuff = String.valueOf(text).getBytes();
         DatagramSocket socket = new DatagramSocket();
 
+        timeOut.start();
+        String str;
+
         for(int i = 0; i < ports.length; i++){
+            socket.send(new DatagramPacket(queryBuff, queryBuff.length, address, ports[i]));
+            System.out.println("INFO: knock on: " + ports[i]);
             try {
-                socket.send(new DatagramPacket(queryBuff, queryBuff.length, address, ports[i]));
-                TimeUnit.MILLISECONDS.sleep(100);
+//                According to: https://gamedev.stackexchange.com/questions/77549/is-there-a-maximum-delay-an-udp-packet-can-have
+                TimeUnit.MILLISECONDS.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
         }
 
-        System.out.println(text);
-
-        byte[] buff = new byte[8192];
-        DatagramPacket packet = new DatagramPacket(buff, buff.length);
-
-        timeOut.start();
         socket.receive(packet);
         timeOut.interrupt();
 
-        String str = new String(packet.getData(), 0, packet.getLength()).trim();
-
-        System.out.println("INFO: I received: " + str);
-
-//      receiving name and lengths of file as csv
+        str = new String(packet.getData(), 0, packet.getLength()).trim();
 
         socket.receive(packet);
 
-        System.out.println(str + " Creating a file...");
+        System.out.println(str + " \nINFO: Creating a file...");
 
         str = new String(packet.getData(), 0, packet.getLength()).trim();
         String[] strArr = str.split(";");
+
         String nameOfFile = strArr[0];
         long lengthOfFile = Long.parseLong(strArr[1]);
 
@@ -65,15 +64,14 @@ public class Client {
         socket.receive(packet);
         System.out.println("INFO: Received content of the file");
 
-        str = new String(packet.getData(), 0, (int) lengthOfFile);
         System.out.println("INFO: Writing data to the file");
 
         try (
-                var fileWriter = new FileWriter(file);
-                var writer = new BufferedWriter(fileWriter);
+                var fileWriter = new FileOutputStream(file);
+                var writer = new BufferedOutputStream(fileWriter);
         ) {
 
-            writer.write(str);
+            writer.write(packet.getData(), 0, (int)lengthOfFile);
         } catch (IOException e) {
             System.err.println("ERR: Failed to write data to the " + file);
         }

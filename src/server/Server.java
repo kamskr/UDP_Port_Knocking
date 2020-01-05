@@ -1,5 +1,6 @@
 package server;
 
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -17,9 +18,6 @@ public class Server {
 
     private String givenPorts;
 
-    public int getNumOfPorts() {
-        return numOfPorts;
-    }
 
     public Server(String givenPorts) throws SocketException {
         this.givenPorts = givenPorts;
@@ -35,16 +33,20 @@ public class Server {
 
         for(int i = 0; i < numOfPorts ; i++){
             int port = Integer.parseInt(portsAsString[i]);
-            ports.add(port);
-            System.out.println("INFO: creating socket on port: " + port);
-            sockets.add(new UDPPort(port, this));
-        }System.out.println("INFO: sent response");
+            try {
+                sockets.add(new UDPPort(port, this));
+                System.out.println("adding port " + port);
+                ports.add(port);
+            }catch (BindException e){
+                System.out.println("Port " + port + " already in use");
+            }
 
+        }
         System.out.print("INFO Server listens on ports: ");
         for(int port : ports){
             System.out.print(port + ", ");
         }
-        System.out.println();
+        System.out.println("\n");
     }
 
     public static void main(String[] args) {
