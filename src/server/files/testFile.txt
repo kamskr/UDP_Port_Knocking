@@ -1,0 +1,9 @@
+Port knocking is usually implemented by configuring a daemon to watch the firewall log file for connection attempts to certain points, and then to modify the firewall configuration accordingly. It can also be performed on the kernel level (using a kernel-level packet filter such as iptables[5]) or by a userspace process examining packets at a higher level (using packet capture interfaces such as pcap), allowing the use of already "open" TCP ports to be used within the knock sequence.
+
+The port "knock" itself is similar to a secret handshake and can consist of any number of TCP, UDP or even sometimes ICMP and other protocol packets to numbered ports on the destination machine. The complexity of the knock can be anything from a simple ordered list (e.g. TCP port 1000, TCP port 2000, UDP port 3000) to a complex time-dependent, source-IP-based and other-factor-based encrypted hash.
+
+A portknock daemon on the firewall machine listens for packets on certain ports (either via the firewall log or by packet capture). The client user would carry an extra utility, which could be as simple as netcat or a modified ping program or as complicated as a full hash-generator, and use that before they attempted to connect to the machine in the usual way.
+
+Most portknocks are stateful systems in that if the first part of the "knock" has been received successfully, an incorrect second part would not allow the remote user to continue and, indeed, would give the remote user no clue as to how far through the sequence they failed. Usually the only indication of failure is that, at the end of the knock sequence, the port expected to be open is not opened. No packets are sent to the remote user at any time.
+
+While this technique for securing access to remote network daemons has not been widely adopted by the security community, it has been actively used in many rootkits even before year 2000.

@@ -12,6 +12,8 @@ public class Client {
 
     public static void main(String[] args) throws IOException {
 
+        String filesDrectory = "src//client//files//";
+
         int[] ports = new int[]{1234, 4321, 1324,5432};
         InetAddress address = InetAddress.getLocalHost();
 //        InetAddress address = args[0];
@@ -79,7 +81,7 @@ public class Client {
         String nameOfFile = strArr[0];
         long lengthOfFile = Long.parseLong(strArr[1]);
 
-        File file = new File("src//client//files//" + nameOfFile);
+        File file = new File(filesDrectory + nameOfFile);
 
         try {
             if(!file.exists()) file.createNewFile();
