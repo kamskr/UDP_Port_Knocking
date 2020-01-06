@@ -12,8 +12,7 @@ public class Server {
     private List<UDPPort> sockets = new ArrayList<>();
     private int numOfPorts;
     public List<Integer> ports = new ArrayList<>();
-    public  boolean[] check = new boolean[]{false, false, false};
-    public int id = 0;
+    public Map<Integer,UDPPort> openedPorts = new HashMap<>();
     public Map<InetAddress,KnockChecker> knockCheckers = new HashMap<>();
 
     private String givenPorts;
@@ -35,6 +34,7 @@ public class Server {
             int port = Integer.parseInt(portsAsString[i]);
             try {
                 sockets.add(new UDPPort(port, this));
+                sockets.get(i).service();
                 System.out.println("adding port " + port);
                 ports.add(port);
             }catch (BindException e){
@@ -50,10 +50,17 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        try{
-            new Server("1234,4321,1324,5432");
-        }catch (SocketException e){
-            e.printStackTrace();
+        boolean serverStarted = false;
+        while(!serverStarted) {
+            try {
+                new Server("1234,4321,1324,5432");
+//                new Server(args[0]);
+                serverStarted = true;
+            } catch (SocketException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                System.out.println("To start server write \"java Server port1,port2,...,portn\"");
+            }
         }
     }
 }

@@ -1,6 +1,8 @@
 package server;
 
+import java.net.BindException;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,6 +15,8 @@ public class KnockChecker {
     private int counter = 0;
     public List<Boolean> check = new ArrayList<>();
     private List<UDPPort> sockets = new ArrayList<>();
+    private int clientPort;
+    private InetAddress clientAdress;
 
     private Thread timeOut = new Thread(() -> {
         System.out.println("INFO: Validating knock sequence...");
@@ -39,7 +43,10 @@ public class KnockChecker {
         timeOut.start();
     }
 
-    public synchronized void check(UDPPort udpPort) {
+    public synchronized void check(UDPPort udpPort){
+        clientAdress = udpPort.getClientAddress();
+        clientPort = udpPort.getClientPort();
+
         System.out.println("INFO: Checking");
         if(!check.get(counter) && udpPort.getPort() == server.ports.get(counter)){
             check.set(counter,true);
@@ -71,21 +78,31 @@ public class KnockChecker {
         for(int i = 0; i < howManySockets; i++){
             check.add(false);
         }
+        sockets.clear();
         server.knockCheckers.remove(ipAdress);
     }
 
     private void correctSequence(){
         timeOut.interrupt();
         System.out.println("INFO: Correct sequence");
-        Integer randomGen = new Random().nextInt( howManySockets);
-        int random = randomGen;
-        sockets.get(random).sendFile();
+
+
+        try {
+            UDPPort port = new UDPPort(server, clientAdress,clientPort);
+            port.sendFile();
+        } catch (SocketException e) {
+            System.out.println("ERR: Failed to open the port");
+            e.printStackTrace();
+        }
+
         counter = 0;
         check.clear();
         for(int i = 0; i < howManySockets; i++){
             check.add(false);
         }
+        sockets.clear();
         server.knockCheckers.remove(ipAdress);
+
     }
 
 

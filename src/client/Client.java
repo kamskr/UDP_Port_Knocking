@@ -1,5 +1,7 @@
 package client;
 
+import server.UDP;
+
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -9,20 +11,41 @@ import java.util.concurrent.TimeUnit;
 public class Client {
 
     public static void main(String[] args) throws IOException {
-        int[] ports = new int[]{1234, 4321, 1324,5432};
-//        String givenPorts = args[0];
-//        InetAddress address = args[1];
 
-        byte[] buff = new byte[2000];
+        int[] ports = new int[]{1234, 4321, 1324,5432};
+        InetAddress address = InetAddress.getLocalHost();
+//        InetAddress address = args[0];
+//        String givenPorts = args[1];
+
+        String[] strPorts;
+        boolean clientStarted = false;
+
+        while(!clientStarted){
+            try{
+//                address = InetAddress.getByName(args[0]);
+//                strPorts = args[1].split(",");
+//                ports = new int[strPorts.length];
+//
+//                for (int i = 0; i < strPorts.length; i++){
+//                    ports[i] = Integer.parseInt(strPorts[i]);
+//                }
+                clientStarted = true;
+            }catch (Exception e){
+                System.out.println("To start client write \"java Client serverIpAddress knockPort1,knockPort2,...,knockPortn\"");
+            }
+        }
+
+        int port;
+        byte[] buff = new byte[UDP.MAX_DATAGRAM_SIZE];
         DatagramPacket packet = new DatagramPacket(buff, buff.length);
 
-        InetAddress address = InetAddress.getLocalHost();
 
-        String text = "knock knock";
+
+        String text = "knock";
 
         byte[] queryBuff = String.valueOf(text).getBytes();
         DatagramSocket socket = new DatagramSocket();
-
+        System.out.println("INFO: Trying to reach the server...");
         timeOut.start();
         String str;
 
@@ -46,14 +69,17 @@ public class Client {
         socket.receive(packet);
 
         System.out.println(str + " \nINFO: Creating a file...");
+        String[] strArr = str.split(" ");
+
+        port = Integer.parseInt(strArr[5]);
 
         str = new String(packet.getData(), 0, packet.getLength()).trim();
-        String[] strArr = str.split(";");
+        strArr = str.split(";");
 
         String nameOfFile = strArr[0];
         long lengthOfFile = Long.parseLong(strArr[1]);
 
-        File file = new File("src//client//" + nameOfFile);
+        File file = new File("src//client//files//" + nameOfFile);
 
         try {
             if(!file.exists()) file.createNewFile();
@@ -61,37 +87,52 @@ public class Client {
             e.printStackTrace();
         }
 
-        socket.receive(packet);
-        System.out.println("INFO: Received content of the file");
+//        Receiving content of the files
+        System.out.println("INFO: Receiving content of the files");
 
-        System.out.println("INFO: Writing data to the file");
+        byte[] data;
+        byte[] store = new byte[(int)lengthOfFile];
+        int position = 0;
+        int counter = 0;
+        while(position < lengthOfFile) {
+            counter++;
+            socket.receive(packet);
+            data = packet.getData();
+            System.arraycopy(data, 0, store, position, packet.getLength());
+            position += packet.getLength();
+            socket.send(new DatagramPacket(queryBuff, queryBuff.length, address, port));
+        }
 
+        if(counter == 0){
+            System.out.println("ERR: Server did not send anything...");
+            System.exit(0);
+        }
+
+        System.out.println("INFO: Writing data to the files");
         try (
-                var fileWriter = new FileOutputStream(file);
-                var writer = new BufferedOutputStream(fileWriter);
+                var fos = new FileOutputStream(file);
+                var fileWriter = new DataOutputStream(fos)
         ) {
 
-            writer.write(packet.getData(), 0, (int)lengthOfFile);
+            fileWriter.write(store);
+            fileWriter.flush();
         } catch (IOException e) {
             System.err.println("ERR: Failed to write data to the " + file);
         }
 
-
+        System.out.println("INFO: Received " + counter + " packages");
         socket.close();
     }
 
     private static Thread timeOut = new Thread(() -> {
-        System.out.println("INFO: Trying to connect with the server...");
-
         try {
             for(int i = 1; i <= 10; i++){
                 TimeUnit.MILLISECONDS.sleep(1000);
-                System.out.println(i);
-            }
+        }
             System.out.println("ERR: Could not reach the server");
             System.exit(0);
         } catch (InterruptedException e) {
-            System.out.println("INFO: Connected to the server");
+            //do nothing
         }
     });
 
